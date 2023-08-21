@@ -37,7 +37,7 @@ const taskReducer: React.Reducer<Task, Action> = (state, { payload, type }) => {
   }
 };
 
-export function TaskForm({ children, clonedTask, ...props }: React.PropsWithChildren<FormProps>) {
+export function TaskForm({ clonedTask, ...props }: FormProps) {
   const [editMode, setEditMode] = React.useState(false);
 
   const [task, dispatch] = React.useReducer(taskReducer, {
@@ -53,8 +53,11 @@ export function TaskForm({ children, clonedTask, ...props }: React.PropsWithChil
 
   const onToggleEdit = () => setEditMode((s) => !s);
   const onSetTitle = (payload: string) => dispatch({ type: "setTitle", payload });
-  const onSetCompleted = (payload: boolean) => dispatch({ type: "setCompleted", payload });
   const onSetDescription = (payload: string) => dispatch({ type: "setDescription", payload });
+  const onSetCompleted = (payload: boolean) => {
+    dispatch({ type: "setCompleted", payload });
+    props?.onSave?.({ ...task, completed: payload });
+  };
 
   const onSubmit = React.useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
@@ -74,6 +77,7 @@ export function TaskForm({ children, clonedTask, ...props }: React.PropsWithChil
   return (
     <form onSubmit={onSubmit}>
       <input
+        id="title"
         name="title"
         value={task.title}
         disabled={props?.task && !editMode}
@@ -81,17 +85,11 @@ export function TaskForm({ children, clonedTask, ...props }: React.PropsWithChil
       />
 
       <textarea
+        id="description"
         name="description"
         value={task.description}
         disabled={props?.task && !editMode}
         onChange={(e) => onSetDescription(e.target.value)}
-      />
-
-      <input
-        type="checkbox"
-        name="completed"
-        checked={task.completed}
-        onChange={(e) => onSetCompleted(e.target.checked)}
       />
 
       <button disabled={props?.task && !editMode}>{!props?.task ? "Add" : "Save"}</button>
@@ -111,6 +109,17 @@ export function TaskForm({ children, clonedTask, ...props }: React.PropsWithChil
           </button>
         </div>
       )}
+
+      <div className="task__checkbox">
+        <label htmlFor="checkbox">{task.completed ? "done" : "close this task"}</label>
+        <input
+          id="checkbox"
+          type="checkbox"
+          name="completed"
+          checked={task.completed}
+          onChange={(e) => onSetCompleted(e.target.checked)}
+        />
+      </div>
     </form>
   );
 }
